@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+# add a db service here (postgres for example), env set in the backend service below
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - "backend/secrets/backend.env"
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+  db:
+    build: ./db
+    env_file: "db/db.env"
+    ports:
+      - "1521:1521"
+    networks:
+      - app-network
+    volumes:
+      - db-data:/opt/oracle/oradata/
+      - type: bind
+        source: ./db/oracledb_scripts
+        target: /opt/oracle/scripts/startup
+    healthcheck:
+        test: ["CMD-SHELL", "echo \"SELECT 1 FROM DUAL;\" | sqlplus -s -L app/$${ORACLE_PWD}@$${ORACLE_PDB}"]
+        interval: 15s
+        timeout: 10s
+        retries: 5
+
+networks:
+  app-network:
+
+volumes:
+  db-data:

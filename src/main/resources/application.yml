@@ -1,0 +1,10 @@
+spring:
+    application:
+        name: hospital
+    datasource:
+        url: jdbc:oracle:thin:@localhost:1521/hospital
+        username: app
+        password: bazydanych
+    jpa:
+        hibernate:
+            ddl-auto: validate
